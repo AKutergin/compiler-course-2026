@@ -11,7 +11,7 @@ private:
   clang::ASTContext *Context;
   size_t GlobalVars = 0;
   size_t StaticVars = 0;
-  size_t LocalVars  = 0;
+  size_t LocalVars = 0;
   size_t FuncParams = 0;
 
 public:
@@ -27,14 +27,12 @@ public:
 
     if (llvm::isa<clang::ParmVarDecl>(VD)) {
       FuncParams++;
-    } 
-    else if (VD->isStaticLocal() || VD->getStorageClass() == clang::SC_Static) {
+    } else if (VD->isStaticLocal() ||
+               VD->getStorageClass() == clang::SC_Static) {
       StaticVars++;
-    } 
-    else if (VD->isLocalVarDecl()) {
+    } else if (VD->isLocalVarDecl()) {
       LocalVars++;
-    } 
-    else if (VD->hasGlobalStorage()) {
+    } else if (VD->hasGlobalStorage()) {
       GlobalVars++;
     }
 
@@ -43,7 +41,7 @@ public:
 
   void ReportResults() const {
     size_t Total = GlobalVars + StaticVars + LocalVars + FuncParams;
-    
+
     llvm::errs() << "--- Unit Statistics (Kutergin Anton) ---\n"
                  << "Total Declarations : " << Total << "\n"
                  << "Global scope       : " << GlobalVars << "\n"
@@ -69,18 +67,19 @@ private:
 
 class VarScopeAnalysisAction final : public clang::PluginASTAction {
 public:
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI,
-                                                       llvm::StringRef) override {
+  std::unique_ptr<clang::ASTConsumer>
+  CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef) override {
     return std::make_unique<TranslationUnitInspector>(&CI.getASTContext());
   }
 
   bool ParseArgs(const clang::CompilerInstance &CI,
                  const std::vector<std::string> &Args) override {
-    return true; 
+    return true;
   }
 };
 
 } // namespace
 
 static clang::FrontendPluginRegistry::Add<VarScopeAnalysisAction>
-    X("var-scope-stats", "Analyzes and counts variables by their storage and scope");
+    X("var-scope-stats",
+      "Analyzes and counts variables by their storage and scope");
