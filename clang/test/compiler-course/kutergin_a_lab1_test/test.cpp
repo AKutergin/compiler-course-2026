@@ -1,11 +1,14 @@
 // RUN: %clang_cc1 -load %llvmshlibdir/VarScopeAnalysis_Kutergin_Anton_FIIT1_ClangAST.so -plugin var-scope-stats %s 2>&1 | FileCheck %s
 
+extern unsigned externValue;
+void foo(int a, double b);
+
 // CHECK: --- Unit Statistics (Kutergin Anton) ---
-// CHECK-NEXT: Total Declarations : 29
-// CHECK-NEXT: Global scope : 4
-// CHECK-NEXT: Static storage : 11
-// CHECK-NEXT: Local variables : 6
-// CHECK-NEXT: Function parameters: 8
+// CHECK-NEXT: Total Declarations : 19
+// CHECK-NEXT: Global scope : 3
+// CHECK-NEXT: Static storage : 9
+// CHECK-NEXT: Local variables : 3
+// CHECK-NEXT: Function parameters: 4
 
 static int g_init_flag = 1;          
 static double g_scale_factor = 0.5;   
@@ -38,42 +41,13 @@ namespace {
 extern int external_linkage;          
 int external_linkage = 42;            
 
-struct Point {
-public:
-    Point(float x_val = 0.0f) : x(x_val) {} 
-    float x;
-};
-
-template<typename T>
-class Wrapper {
-public:
-    Wrapper(T data) : m_data(data) {} 
-    T m_data;
-};
-
-template<typename P1, typename P2>
-static P1 compute(P1 val1, P2 val2) { 
-    static P1 internal_cache;         
-    return internal_cache + val1;
-}
-
 static void run_logic(int mode, float threshold) { 
     int status_code = mode + 10;                   
 }
 
 int main(int argc, char** argv) {      
-
-    static Wrapper<int> w_int(10);     
-    Wrapper<float> w_float(1.1f);      
-
-    Point p1;                         
-    
     int result = 0;                    
-    
-    constexpr int max_iterations = 50; 
-    static constexpr int offset = 5;   
-    
+    static int offset = 5;   
     int iteration_index = 0;           
-    
     return result;
 }

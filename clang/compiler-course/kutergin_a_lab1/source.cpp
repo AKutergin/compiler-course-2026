@@ -8,25 +8,30 @@ namespace {
 
 class ScopeScanner final : public clang::RecursiveASTVisitor<ScopeScanner> {
 private:
-  clang::ASTContext *Context;
   size_t GlobalVars = 0;
   size_t StaticVars = 0;
   size_t LocalVars = 0;
   size_t FuncParams = 0;
 
 public:
-  explicit ScopeScanner(clang::ASTContext *Ctx) : Context(Ctx) {}
+  explicit ScopeScanner(clang::ASTContext *Ctx) {}
 
-  // Пропускаем шаблоны, чтобы не дублировать статистику при инстанцировании
   bool shouldVisitTemplateInstantiations() const { return false; }
 
   bool VisitVarDecl(clang::VarDecl *VD) {
-    if (!VD->isFirstDecl()) {
+
+    if (VD->isThisDeclarationADefinition() != clang::VarDecl::Definition) {
       return true;
     }
 
-    if (llvm::isa<clang::ParmVarDecl>(VD)) {
-      FuncParams++;
+    if (const auto *PVD = llvm::dyn_cast<clang::ParmVarDecl>(VD)) {
+
+      if (const auto *FD =
+              llvm::dyn_cast<clang::FunctionDecl>(PVD->getDeclContext())) {
+        if (FD->isThisDeclarationADefinition()) {
+          FuncParams++;
+        }
+      }
     } else if (VD->isStaticLocal() ||
                VD->getStorageClass() == clang::SC_Static) {
       StaticVars++;
