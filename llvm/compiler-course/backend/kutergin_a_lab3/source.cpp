@@ -25,12 +25,9 @@ public:
         MachineInstr &MI = *I;
         unsigned Opcode = MI.getOpcode();
 
-        if (Opcode == X86::INC32r || Opcode == X86::INC64r ||
-            Opcode == X86::DEC32r || Opcode == X86::DEC64r) {
-
+        if (isAllowedOpcode(Opcode)) {
           Register Reg = MI.getOperand(0).getReg();
-          int Accumulator =
-              (Opcode == X86::INC32r || Opcode == X86::INC64r) ? 1 : -1;
+          int Accumulator = getOpcodeValue(Opcode);
 
           auto NextI = std::next(I);
           SmallVector<MachineInstr *, 4> ToErase;
@@ -38,12 +35,9 @@ public:
 
           while (NextI != MBB.end()) {
             unsigned NextOp = NextI->getOpcode();
-            if ((NextOp == X86::INC32r || NextOp == X86::INC64r ||
-                 NextOp == X86::DEC32r || NextOp == X86::DEC64r) &&
+            if (isAllowedOpcode(NextOp) &&
                 NextI->getOperand(0).getReg() == Reg) {
-
-              Accumulator +=
-                  (NextOp == X86::INC32r || NextOp == X86::INC64r) ? 1 : -1;
+              Accumulator += getOpcodeValue(NextOp);
               ToErase.push_back(&*NextI);
               ++NextI;
             } else {
@@ -85,6 +79,20 @@ public:
 
   StringRef getPassName() const override {
     return "X86 INC/DEC to ADD/SUB transformation";
+  }
+
+private:
+  bool isAllowedOpcode(unsigned Opcode) const {
+    return Opcode == X86::INC32r || Opcode == X86::INC64r ||
+           Opcode == X86::DEC32r || Opcode == X86::DEC64r;
+  }
+
+  int getOpcodeValue(unsigned Opcode) const {
+    if (Opcode == X86::INC32r || Opcode == X86::INC64r)
+      return 1;
+    if (Opcode == X86::DEC32r || Opcode == X86::DEC64r)
+      return -1;
+    return 0;
   }
 };
 } // end anonymous namespace
