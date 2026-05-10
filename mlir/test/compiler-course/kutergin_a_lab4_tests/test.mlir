@@ -1,4 +1,4 @@
-// RUN: mlir-opt -load-pass-plugin=%llvmshlibdir/kutergin_a_lab4_MLIR%shlibext --pass-pipeline="builtin.module(count-function-calls)" %s | FileCheck %s
+// RUN: mlir-opt -load-pass-plugin=%mlir_shlib_dir/kutergin_a_lab4_MLIR%shlibext --pass-pipeline="builtin.module(count-function-calls)" %s | FileCheck %s
 
 // CHECK: func.func @target_multi_call
 // CHECK-SAME: kutergin_call_count = 3 : i64
